@@ -3,11 +3,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
-using std::string_literals::operator""s;
 namespace fs = std::filesystem;
 using std::cout;
 using std::endl;
 using std::string;
+using std::string_literals::operator""s;
 using std::vector;
 
 vector<string> split(string str, string const dlim) {
@@ -243,7 +243,6 @@ int main(int argc, char **argv) {
     if (success) {
       if (verbose)
         cout << "# Finding Build Path:" << endl << "# Finding goals" << endl;
-      ;
       vector<TDig> build_path_looking;
       for (auto &tf : transforms)
         if (std::any_of(targets.begin(), targets.end(),
@@ -286,10 +285,19 @@ int main(int argc, char **argv) {
           cout << "# " << t;
         cout << endl;
       }
+      if (true /*delete temporaries*/) {
+        for (auto &t : build_path) {
+          if (!t.production.size())
+            continue; // ignore source files
+          if (!std::any_of(targets.begin(), targets.end(),
+                           [&](TDig tg) { return t == tg; }))
+            cout << "rm " << t << endl;
+        }
+      }
     } else {
       if (verbose)
         cout << "# Brute Force failed" << endl;
-      std::cerr << "No Path Found" << endl;
+      std::cerr << "No Build Path Found" << endl;
       exit(1);
     }
   }
