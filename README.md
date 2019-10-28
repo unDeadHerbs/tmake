@@ -1,7 +1,7 @@
 T-Diagram Make
 ==============
 
-Usage: tmake [results] [-r runnable]
+Usage: tmake [results] [-r=runnable1,runnable2]
 Results in the form [from.to.in], [name.in], [name]
 files of the type [name] are interpreted as [name.bin]
 Runnable defaults to bin, sh

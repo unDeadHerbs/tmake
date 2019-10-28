@@ -1,6 +1,6 @@
 CXX         = clang++
 LIBARYFLAGS = 
-CXXFLAGS    = -std=c++1z -Wall -Wextra -Wparentheses -g $(SANS)
+CXXFLAGS    = -std=c++2a -Wall -Wextra -Wparentheses -g $(SANS)
 
 .PHOMY:all seg msan
 all: format TAGS deps mains
