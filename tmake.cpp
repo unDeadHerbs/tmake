@@ -119,12 +119,17 @@ bool brute_force(vector<TDig> &transforms, vector<string> const &runnables,
                        [t](TDig r) { return r == t; });
   }) && transforms.size() != seen) {
     seen = transforms.size();
+  brk:
     for (auto &t : transforms)
       for (auto &b : transforms)
         if (std::any_of(runnables.begin(), runnables.end(),
                         [&](string r) { return b.native == r; }))
           if (t.native == b.source)
-            transforms.push_back({b, t});
+            if (!std::any_of(transforms.begin(), transforms.end(),
+                             [&](TDig t2) { return t2 == TDig(b, t); })) {
+              transforms.push_back({b, t});
+              goto brk;
+            }
   }
   return std::all_of(targets.begin(), targets.end(), [&](TDig t) {
     return std::any_of(transforms.begin(), transforms.end(),
@@ -268,6 +273,7 @@ int main(int argc, char **argv) {
             build_path_looking.push_back(bp.production[1]);
         }
       }
+      std::reverse(build_path.begin(), build_path.end());
       if (verbose)
         cout << "# Finished building path" << endl;
       if (verbose)
