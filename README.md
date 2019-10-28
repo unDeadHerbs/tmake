@@ -1,33 +1,57 @@
 T-Diagram Make
 ==============
 
-Usage: tmake [results] [-r=runnable1,runnable2]
-Results in the form [from.to.in], [name.in], [name]
-files of the type [name] are interpreted as [name.bin]
-Runnable defaults to bin, sh
+A tool for deciding the build order of chained compilers and cross compilers.
 
-Example:
-$ ls
-null.hello.cpp cpp.bin.bin
-$ tmake null.hello.bin
-cpp.bin.bin null.hello.cpp
+T-Diagrams
+----------
 
-Example:
-$ ls
-cpp.bin.bin bf.cpp.cpp null.hello.bf
-$ tmake null.hello.bin
-cpp.bin.bin bf.cpp.cpp
-bf.cpp.bin null.hello.bf
-cpp.bin.bin null.hello.cpp
+A T-Diagram is a mental tool for keeping track of how [a set of
+compiler tools are
+built](https://www.youtube.com/watch?v=PjeE8Bc96HY).  This is
+particularly useful when working on cross compilers or building up the
+base tool for a new system.
 
-Example:
-$ ls
-tmake.cpp cpp.bin.sh
-$ tmake tmake
-cpp.bin.sh tmake.cpp
+If you have an assembler written in machine code.
+```
+            +-----------------------------+
+Assembler = | Assembly            Binary  |
+            +---------+          +--------+
+                      |  Binary  |
+                      +----------+
+```
 
-Specs:
-Will accept folders as input. Will accept multiple runnables.
+And a compiler to assembly written in assembly.
+```
+           +------------------------------+
+Compiler = | Language            Assembly |
+           +---------+          +---------+
+                     | Assembly |
+                     +----------+
+```
 
-Special rule for "make a.b.runnable".
-Special type "null" means "no input" or "no output"
+One can put the Compiler though the Assembler to obtain a compiler
+that is executable on your system.
+```
+            +------------------------------+                          +------------------------------+
+Compiler2 = | Language            Assembly |                        = | Language            Assembly |
+            +---------+          +---------+--------------------+     +---------+          +---------+
+                      | Assembly | Assembly             Binary  |               |  Binary  |
+                      +----------+---------+          +---------+               +----------+
+                                           |  Binary  |
+                                           +----------+
+```
+
+
+Future Work
+-----------
+
+Currently an optimizer isn't expressible in the TDig class.
+
+```
+            +--------------------------------------+
+Optimizer = | Intermediate  Quality   Intermediate |
+            +-------------+          +-------------+
+                          |  Binary  |
+                          +----------+
+```
