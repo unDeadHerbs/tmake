@@ -286,6 +286,11 @@ int main(int argc, char **argv) {
           cout << "# " << t;
         cout << endl;
       }
+    } else {
+      if (verbose)
+        cout << "# Brute Force failed" << endl;
+      std::cerr << "No Path Found" << endl;
+      exit(1);
     }
   }
 
