@@ -86,8 +86,53 @@ std::ostream &operator<<(std::ostream &o, TDig const &t) {
   return o << t.source << "." << t.native;
 }
 
-int main(int argc, char **argv) {
+std::ostream &operator<<(std::ostream &o, vector<TDig> const &vt) {
+  for (auto &t : vt)
+    o << t << " ";
+  return o;
+}
 
+bool trivial(vector<TDig> &transforms, vector<TDig> const &tools,
+             vector<TDig> const &targets) {
+  size_t seen = 0;
+  while (!std::all_of(targets.begin(), targets.end(), [&](TDig t) {
+    return std::any_of(transforms.begin(), transforms.end(),
+                       [t](TDig r) { return r == t; });
+  }) && transforms.size() != seen) {
+    seen = transforms.size();
+    for (auto &t : transforms)
+      for (auto &b : tools)
+        if (t.native == b.source)
+          transforms.push_back({b, t});
+  }
+  return std::all_of(targets.begin(), targets.end(), [&](TDig t) {
+    return std::any_of(transforms.begin(), transforms.end(),
+                       [t](TDig r) { return r == t; });
+  });
+}
+
+bool brute_force(vector<TDig> &transforms, vector<string> const &runnables,
+                 vector<TDig> const &targets) {
+  size_t seen = 0;
+  while (!std::all_of(targets.begin(), targets.end(), [&](TDig t) {
+    return std::any_of(transforms.begin(), transforms.end(),
+                       [t](TDig r) { return r == t; });
+  }) && transforms.size() != seen) {
+    seen = transforms.size();
+    for (auto &t : transforms)
+      for (auto &b : transforms)
+        if (std::any_of(runnables.begin(), runnables.end(),
+                        [&](string r) { return b.native == r; }))
+          if (t.native == b.source)
+            transforms.push_back({b, t});
+  }
+  return std::all_of(targets.begin(), targets.end(), [&](TDig t) {
+    return std::any_of(transforms.begin(), transforms.end(),
+                       [t](TDig r) { return r == t; });
+  });
+}
+
+int main(int argc, char **argv) {
   vector<string> args;
   for (int i = 1; i < argc; i++)
     args.push_back(argv[i]);
@@ -166,29 +211,76 @@ int main(int argc, char **argv) {
 
   // find transforms to get to target
   vector<TDig> transforms = source;
-  size_t seen = 0;
-  while (!std::all_of(targets.begin(), targets.end(), [&](TDig t) {
-    return std::any_of(transforms.begin(), transforms.end(),
-                       [t](TDig r) { return r == t; });
-  }) && transforms.size() != seen) {
-    seen = transforms.size();
-    for (auto &t : transforms)
-      for (auto &b : tools)
-        if (t.native == b.source)
-          transforms.push_back({b, t});
-  }
-
   if (verbose)
-    cout << "# Build Path:" << endl;
-  for (auto &t : transforms) {
-    if (!t.production.size())
-      continue; // ignore source files
-    cout << "./";
-    for (auto &p : t.production)
-      cout << p << " ";
+    cout << "# Trying trival search" << endl;
+  bool success = trivial(transforms, tools, targets);
+
+  if (success) {
     if (verbose)
-      cout << "# " << t;
-    cout << endl;
+      cout << "# Build Path:" << endl;
+    for (auto &t : transforms) {
+      if (!t.production.size())
+        continue; // ignore source files
+      cout << "./" << t.production;
+      if (verbose)
+        cout << "# " << t;
+      cout << endl;
+    }
+  } else {
+    if (verbose)
+      cout << "# Trival search failed, brute force time" << endl;
+    for (auto &t : tools)
+      transforms.push_back(t);
+    for (auto &s : sources)
+      transforms.push_back(s);
+    success = brute_force(transforms, runnables, targets);
+
+    if (success) {
+      if (verbose)
+        cout << "# Finding Build Path:" << endl << "# Finding goals" << endl;
+      ;
+      vector<TDig> build_path_looking;
+      for (auto &tf : transforms)
+        if (std::any_of(targets.begin(), targets.end(),
+                        [&](TDig t) { return t == tf; }) &&
+            !std::any_of(build_path_looking.begin(), build_path_looking.end(),
+                         [&](TDig t) { return t == tf; }))
+          build_path_looking.push_back(tf);
+      if (verbose) {
+        cout << "# Found Goals:" << endl;
+        for (auto &bp : build_path_looking)
+          cout << "# " << bp.production << " -> " << bp << endl;
+        cout << "# Finding paths" << endl;
+      }
+      vector<TDig> build_path;
+      while (build_path_looking.size()) {
+        auto bp = build_path_looking.front();
+        if (!std::any_of(build_path.begin(), build_path.end(),
+                         [&](TDig bp2) { return bp2 == bp; }))
+          build_path.push_back(bp);
+        build_path_looking.erase(build_path_looking.begin());
+        if (bp.production.size()) {
+          if (!std::any_of(build_path.begin(), build_path.end(),
+                           [&](TDig bp2) { return bp2 == bp.production[0]; }))
+            build_path_looking.push_back(bp.production[0]);
+          if (!std::any_of(build_path.begin(), build_path.end(),
+                           [&](TDig bp2) { return bp2 == bp.production[1]; }))
+            build_path_looking.push_back(bp.production[1]);
+        }
+      }
+      if (verbose)
+        cout << "# Finished building path" << endl;
+      if (verbose)
+        cout << "# Build Path:" << endl;
+      for (auto &t : build_path) {
+        if (!t.production.size())
+          continue; // ignore source files
+        cout << "./" << t.production;
+        if (verbose)
+          cout << "# " << t;
+        cout << endl;
+      }
+    }
   }
 
   return 0;
