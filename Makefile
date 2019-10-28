@@ -1,6 +1,6 @@
 CXX         = clang++
-LIBARYFLAGS = 
-CXXFLAGS    = -std=c++2a -Wall -Wextra -Wparentheses -g $(SANS)
+LIBARYFLAGS = -stdlib=libc++
+CXXFLAGS    = -std=c++2a -Wall -Wextra -Wparentheses -g $(SANS) $(LIBARYFLAGS)
 
 .PHOMY:all seg msan
 all: format TAGS deps mains
