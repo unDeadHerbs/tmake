@@ -62,7 +62,22 @@ struct TDig {
     } else
       cout << "nuuuu" << endl;
   }
+  TDig(TDig tool, TDig from) {
+    if (from.native != tool.source) {
+      cout << "can't make that TDig" << endl;
+    } else {
+      source = from.source;
+      dest = from.dest;
+      native = tool.dest;
+      production = {tool, from};
+    }
+  }
 };
+
+bool operator==(TDig const &lhs, TDig const &rhs) {
+  return lhs.source == rhs.source && lhs.dest == rhs.dest &&
+         lhs.native == rhs.native;
+}
 
 std::ostream &operator<<(std::ostream &o, TDig const &t) {
   if (t.dest.size())
@@ -91,12 +106,12 @@ int main(int argc, char **argv) {
     if (!starts_with(arg, "-r="))
       targets.push_back({arg, runnables});
 
-  cout << "runnables: ";
+  cout << "# runnables: ";
   for (auto const &r : runnables)
     cout << r << ", ";
   cout << endl;
 
-  cout << "targets: ";
+  cout << "# targets: ";
   for (auto const &t : targets)
     cout << t << ", ";
   cout << endl;
@@ -114,11 +129,11 @@ int main(int argc, char **argv) {
         } else
           sources.push_back(t);
     }
-  cout << "sources: ";
+  cout << "# sources: ";
   for (auto const &s : sources)
     cout << s << ", ";
   cout << endl;
-  cout << "bins: ";
+  cout << "# bins: ";
   for (auto const &t : tools)
     cout << t << ", ";
   cout << endl;
@@ -129,12 +144,33 @@ int main(int argc, char **argv) {
     if (std::any_of(targets.begin(), targets.end(),
                     [&](TDig t) { return t.source == s.source; }))
       source.push_back(s);
-  cout << "useful sources: ";
+  cout << "# useful sources: ";
   for (auto &s : source)
     cout << s << ", ";
   cout << endl;
 
   // find transforms to get to target
+  vector<TDig> transforms = source;
+  size_t seen = 0;
+  while (!std::all_of(targets.begin(), targets.end(), [&](TDig t) {
+    return std::any_of(transforms.begin(), transforms.end(),
+                       [t](TDig r) { return r == t; });
+  }) && transforms.size() != seen) {
+    seen = transforms.size();
+    for (auto &t : transforms)
+      for (auto &b : tools)
+        if (t.native == b.source)
+          transforms.push_back({b, t});
+  }
+
+  cout << "# Build Path:" << endl;
+  for (auto &t : transforms) {
+    if (!t.production.size())
+      continue; // ignore source files
+    for (auto &p : t.production)
+      cout << p << " ";
+    cout << "# " << t << endl;
+  }
 
   return 0;
 }
