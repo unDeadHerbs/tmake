@@ -137,7 +137,45 @@ bool brute_force(vector<TDig> &transforms, vector<string> const &runnables,
   });
 }
 
+void usage(char const *argv0) {
+  cout << "Usage: " << argv0 << "e [results] [-r=runnable1,runnable2]" << endl
+       << "Results in the form [from.to.in], [name.in], [name]" << endl
+       << "files of the type [name] are interpreted as [name.bin]" << endl
+       << "Runnable defaults to bin, sh" << endl
+       << endl
+       << "Example:" << endl
+       << "$ ls" << endl
+       << "null.hello.cpp cpp.bin.bin" << endl
+       << "$ tmake null.hello.bin" << endl
+       << "cpp.bin.bin null.hello.cpp" << endl
+       << "" << endl
+       << "Example:" << endl
+       << "$ ls" << endl
+       << "cpp.bin.bin bf.cpp.cpp null.hello.bf" << endl
+       << "$ tmake null.hello.bin" << endl
+       << "cpp.bin.bin bf.cpp.cpp" << endl
+       << "bf.cpp.bin null.hello.bf" << endl
+       << "cpp.bin.bin null.hello.cpp" << endl
+       << endl
+       << "Example:" << endl
+       << "$ ls" << endl
+       << "tmake.cpp cpp.bin.sh" << endl
+       << "$ tmake tmake" << endl
+       << "cpp.bin.sh tmake.cpp" << endl
+       << "" << endl
+       << "Specs:" << endl
+       << "Will accept folders as input. Will accept multiple runnables."
+       << endl
+       << endl
+       << "Special rule for \"make a.b.runnable\"." << endl
+       << "Special type \"null\" means \"no input\" or \"no output" << endl;
+}
+
 int main(int argc, char **argv) {
+  if (argc == 1) {
+    usage(argv[0]);
+    exit(0);
+  }
   vector<string> args;
   for (int i = 1; i < argc; i++)
     args.push_back(argv[i]);
@@ -154,6 +192,10 @@ int main(int argc, char **argv) {
       }
       if (arg == "-v"s) {
         verbose = true;
+      }
+      if (arg == "-h"s) {
+        usage(argv[0]);
+        exit(0);
       } else {
         std::cerr << "Unknown option \"" << arg << "\"" << endl;
         exit(-1);
