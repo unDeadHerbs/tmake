@@ -46,7 +46,7 @@ Compiler2 = | Language            Assembly |                        = | Language
 Future Work
 -----------
 
-Currently an optimizer isn't expressible in the TDig class.
+1) Currently an optimizer isn't expressible in the TDig class.
 
 ```
             +--------------------------------------+
@@ -55,3 +55,17 @@ Optimizer = | Intermediate  Quality   Intermediate |
                           |  Binary  |
                           +----------+
 ```
+
+2) Support for interpreters.
+
+```
+              +------------------------+
+Interpreter = |   Language             |
+              +-------------+          +
+                            |  Binary  |
+                            +----------+
+```
+
+3) Support for naming programs, i.e. a seperate file that lists the T Diageam type of each program.
+
+4) If a directory is untyped look for a file inside with the same base name as use it's type.

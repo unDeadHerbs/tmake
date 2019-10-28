@@ -1,3 +1,26 @@
+/**
+ * @file
+ * @author  Murray Fordyce <Murray.Fordyce@gmail.com>
+ * @version 1.0
+ *
+ * @section LICENSE
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details at
+ * https://www.gnu.org/copyleft/gpl.html
+ *
+ * @section DESCRIPTION
+ *
+ * A tool for deciding the build order of chained compilers and cross compilers.
+ */
+
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
@@ -10,6 +33,14 @@ using std::string;
 using std::string_literals::operator""s;
 using std::vector;
 
+
+/**
+ * Split a string by a delimiter.
+ *
+ * @param str The string to be split.
+ * @param dlim The delimiter to split the string by.
+ * @return A vector of the sub-strings. 
+ */
 vector<string> split(string str, string const dlim) {
   vector<string> ret;
   size_t pos;
@@ -22,18 +53,53 @@ vector<string> split(string str, string const dlim) {
   return ret;
 }
 
-bool starts_with(string const s, string const p) {
-  if (p.size() > s.size())
+/**
+ * Check if a string starts with a value.
+ *
+ * Temporary until
+ * `std::basic_string::starts_with` is supported.
+ *
+ * @param str The string to check in.
+ * @param pat The pattern to check against.
+ * @return If the string starts with the pattern.
+ */
+bool starts_with(string const str, string const pat) {
+  if (pat.size() > str.size())
     return false;
-  for (size_t i = 0; i < p.size(); i++)
-    if (p[i] != s[i])
+  for (size_t i = 0; i < pat.size(); i++)
+    if (pat[i] != str[i])
       return false;
   return true;
 }
 
+/**
+ * A class to represent a T Diagram.
+ */
 struct TDig {
-  string source, dest, native;
-  vector<TDig> production;
+  /**
+   * The type or format of the source material.
+   */
+  string source;
+  /**
+   * The type or format of the destination material.
+   */
+  string dest;
+  /**
+   * The type or format that this item is in.
+   */
+  string native;
+  /**
+   * The T Diagrams used to create this one (it they exist).
+   */
+  vector<TDig> production; //TODO: make this an `optional<pair<>>` for
+			   //better readability.
+  /**
+   * Parse a string of a T Diagram.
+   *
+   * This can fail.
+   *
+   * @param t The string to parse.
+   */
   TDig(string t) {
     auto s = split(t, ".");
     if (s.size() == 1) {
@@ -46,8 +112,14 @@ struct TDig {
       dest = s[1];
       native = s[2];
     } else
-      cout << "nuuuu" << endl;
+      cout << "nuuuu" << endl; //TODO: Find a better way to do this.
   }
+  /**
+   * Parse a string of a T Diagram. With optional default  type.
+   *
+   * @param t The string to be parsed.
+   * @param natives The set of types that are evaluable on the current system.
+   */
   TDig(string t, vector<string> natives) {
     auto s = split(t, ".");
     if (s.size() == 1) {
@@ -61,11 +133,18 @@ struct TDig {
       dest = s[1];
       native = s[2];
     } else
-      cout << "nuuuu" << endl;
+      cout << "nuuuu" << endl; // TODO: Find a better way to do this.
   }
+  /**
+   * Construct a new T Diagram out of two previous ones.
+   *
+   * @param tool The T Diagram that is evaluating the other.
+   * @param from The T Diagram that is being evaluated.
+   */
   TDig(TDig tool, TDig from) {
     if (from.native != tool.source) {
-      cout << "can't make that TDig" << endl;
+      cout << "can't make that TDig" << endl; // TODO: Find a better
+					      // way to do this.
     } else {
       source = from.source;
       dest = from.dest;
@@ -75,23 +154,57 @@ struct TDig {
   }
 };
 
+/**
+ * Detect if two T Diagrams have the same effect.
+ *
+ * @param lhs The left TDig to compare.
+ * @param rhs The right TDig to compare.
+ * @return If they are the same.
+ */
 bool operator==(TDig const &lhs, TDig const &rhs) {
+  // TODO: Add some from of "Difficulty to obtain" so that easier to
+  // build diagrams are find-able.
   return lhs.source == rhs.source && lhs.dest == rhs.dest &&
          lhs.native == rhs.native;
 }
 
+/**
+ * Print out a T Diagram's file's name.
+ *
+ * @param o The stream to print to.
+ * @param t The TDig to print.
+ * @return The stream printed to.
+ */
 std::ostream &operator<<(std::ostream &o, TDig const &t) {
   if (t.dest.size())
     return o << t.source << "." << t.dest << "." << t.native;
   return o << t.source << "." << t.native;
 }
 
+/**
+ * Print out a pair of T Diagrams for evaluating on the command line.
+ *
+ * @param o The stream to be printed into.
+ * @param vt the pair of Diagrams.
+ * @return The stream printed into.
+ */
 std::ostream &operator<<(std::ostream &o, vector<TDig> const &vt) {
+  // TODO: Update this to a `pair` as well.
   for (auto &t : vt)
     o << t << " ";
   return o;
 }
 
+/**
+ * Search if the target can be build from source with only the
+ * existing tools.
+ *
+ * @param transforms OUT The set of transforms needed to build the
+ *                       target.
+ * @param tools The existing set of tools for building with.
+ * @param targets The list of targets.
+ * @return If the search was successfully.
+ */
 bool trivial(vector<TDig> &transforms, vector<TDig> const &tools,
              vector<TDig> const &targets) {
   size_t seen = 0;
@@ -111,6 +224,19 @@ bool trivial(vector<TDig> &transforms, vector<TDig> const &tools,
   });
 }
 
+/**
+ * Search for if the target can be build by building new tools.
+ *
+ * Perform a (mostly) BFS through the combinations of T Diagrams to
+ * find a path to building all of the targets.
+ *
+ * @param transforms OUT The set of transforms needed to build the
+ *                       targets.
+ * @param runnables The set of extensions that are executable on the
+ *                       system. 
+ * @param targets The set of targets for the build.
+ * @return If the search was successful.
+ */
 bool brute_force(vector<TDig> &transforms, vector<string> const &runnables,
                  vector<TDig> const &targets) {
   size_t seen = 0;
@@ -137,6 +263,9 @@ bool brute_force(vector<TDig> &transforms, vector<string> const &runnables,
   });
 }
 
+/**
+ * Print usage information to the terminal.
+ */
 void usage(char const *argv0) {
   cout << "Usage: " << argv0 << "e [results] [-r=runnable1,runnable2]" << endl
        << "Results in the form [from.to.in], [name.in], [name]" << endl
@@ -171,6 +300,10 @@ void usage(char const *argv0) {
        << "Special type \"null\" means \"no input\" or \"no output" << endl;
 }
 
+
+/**
+ * A function in desperate need of separation.
+ */
 int main(int argc, char **argv) {
   if (argc == 1) {
     usage(argv[0]);
@@ -184,6 +317,7 @@ int main(int argc, char **argv) {
   vector<string> runnables;
   bool verbose = false;
 
+  // Handel the CLI parameters.
   for (auto &arg : args)
     if (starts_with(arg, "-")) {
       if (starts_with(arg, "-r=")) {
@@ -220,7 +354,7 @@ int main(int argc, char **argv) {
   }
 
   vector<TDig> sources, tools;
-  // get existings
+  // Find the existing diagrams.
   for (auto &p : fs::directory_iterator("."))
     if (!starts_with(p.path().filename(), ".")) {
       TDig t = {p.path().filename()};
@@ -243,8 +377,9 @@ int main(int argc, char **argv) {
     cout << endl;
   }
 
-  // find existing with correct (source, dest)
-  vector<TDig> source; // convert to std::views when that exists
+  // Find existing source with the correct (source, dest).
+  // TODO: Move this into `bool trivial()`.
+  vector<TDig> source; // TODO: Convert this loop to `std::views` in C++20.
   for (auto &s : sources)
     if (std::any_of(targets.begin(), targets.end(),
                     [&](TDig t) { return t.source == s.source; }))
@@ -256,7 +391,8 @@ int main(int argc, char **argv) {
     cout << endl;
   }
 
-  // find transforms to get to target
+  // Find transforms to get to target.
+  // TODO: Wrap trivial and brute_force into a container function.
   vector<TDig> transforms = source;
   if (verbose)
     cout << "# Trying trival search" << endl;
@@ -283,6 +419,7 @@ int main(int argc, char **argv) {
     success = brute_force(transforms, runnables, targets);
 
     if (success) {
+      // TODO: Move this trimming into `bool brute_force()`.
       if (verbose)
         cout << "# Finding Build Path:" << endl << "# Finding goals" << endl;
       vector<TDig> build_path_looking;
@@ -327,6 +464,7 @@ int main(int argc, char **argv) {
           cout << "# " << t;
         cout << endl;
       }
+      // TODO: Move this to apply to solvers forms.
       if (true /*delete temporaries*/) {
         for (auto &t : build_path) {
           if (!t.production.size())
