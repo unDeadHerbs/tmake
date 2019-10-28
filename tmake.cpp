@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+using std::string_literals::operator""s;
 namespace fs = std::filesystem;
 using std::cout;
 using std::endl;
@@ -93,28 +94,38 @@ int main(int argc, char **argv) {
 
   vector<TDig> targets;
   vector<string> runnables;
+  bool verbose = false;
 
   for (auto &arg : args)
-    if (starts_with(arg, "-r=")) {
-      arg.erase(0, 3);
-      runnables = split(arg, ",");
+    if (starts_with(arg, "-")) {
+      if (starts_with(arg, "-r=")) {
+        arg.erase(0, 3);
+        runnables = split(arg, ",");
+      }
+      if (arg == "-v"s) {
+        verbose = true;
+      } else {
+        std::cerr << "Unknown option \"" << arg << "\"" << endl;
+        exit(-1);
+      }
     }
   if (!runnables.size())
     runnables = {"bin", "sh"};
 
   for (auto &arg : args)
-    if (!starts_with(arg, "-r="))
+    if (!starts_with(arg, "-"))
       targets.push_back({arg, runnables});
 
-  cout << "# runnables: ";
-  for (auto const &r : runnables)
-    cout << r << ", ";
-  cout << endl;
-
-  cout << "# targets: ";
-  for (auto const &t : targets)
-    cout << t << ", ";
-  cout << endl;
+  if (verbose) {
+    cout << "# runnables: ";
+    for (auto const &r : runnables)
+      cout << r << ", ";
+    cout << endl;
+    cout << "# targets: ";
+    for (auto const &t : targets)
+      cout << t << ", ";
+    cout << endl;
+  }
 
   vector<TDig> sources, tools;
   // get existings
@@ -129,14 +140,16 @@ int main(int argc, char **argv) {
         } else
           sources.push_back(t);
     }
-  cout << "# sources: ";
-  for (auto const &s : sources)
-    cout << s << ", ";
-  cout << endl;
-  cout << "# bins: ";
-  for (auto const &t : tools)
-    cout << t << ", ";
-  cout << endl;
+  if (verbose) {
+    cout << "# sources: ";
+    for (auto const &s : sources)
+      cout << s << ", ";
+    cout << endl;
+    cout << "# bins: ";
+    for (auto const &t : tools)
+      cout << t << ", ";
+    cout << endl;
+  }
 
   // find existing with correct (source, dest)
   vector<TDig> source; // convert to std::views when that exists
@@ -144,10 +157,12 @@ int main(int argc, char **argv) {
     if (std::any_of(targets.begin(), targets.end(),
                     [&](TDig t) { return t.source == s.source; }))
       source.push_back(s);
-  cout << "# useful sources: ";
-  for (auto &s : source)
-    cout << s << ", ";
-  cout << endl;
+  if (verbose) {
+    cout << "# useful sources: ";
+    for (auto &s : source)
+      cout << s << ", ";
+    cout << endl;
+  }
 
   // find transforms to get to target
   vector<TDig> transforms = source;
@@ -163,13 +178,17 @@ int main(int argc, char **argv) {
           transforms.push_back({b, t});
   }
 
-  cout << "# Build Path:" << endl;
+  if (verbose)
+    cout << "# Build Path:" << endl;
   for (auto &t : transforms) {
     if (!t.production.size())
       continue; // ignore source files
+    cout << "./";
     for (auto &p : t.production)
       cout << p << " ";
-    cout << "# " << t << endl;
+    if (verbose)
+      cout << "# " << t;
+    cout << endl;
   }
 
   return 0;
