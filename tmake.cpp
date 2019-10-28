@@ -91,7 +91,6 @@ int main(int argc, char **argv) {
     if (!starts_with(arg, "-r="))
       targets.push_back({arg, runnables});
 
-  // debug tmp
   cout << "runnables: ";
   for (auto const &r : runnables)
     cout << r << ", ";
@@ -125,10 +124,17 @@ int main(int argc, char **argv) {
   cout << endl;
 
   // find existing with correct (source, dest)
+  vector<TDig> source; // convert to std::views when that exists
+  for (auto &s : sources)
+    if (std::any_of(targets.begin(), targets.end(),
+                    [&](TDig t) { return t.source == s.source; }))
+      source.push_back(s);
+  cout << "useful sources: ";
+  for (auto &s : source)
+    cout << s << ", ";
+  cout << endl;
 
   // find transforms to get to target
-
-  // find transforms for needed
 
   return 0;
 }
