@@ -2,7 +2,8 @@ T-Diagram Make
 ==============
 
 Usage: tmake [results] [-r runnable]
-Results in the form from.to.in
+Results in the form [from.to.in], [name.in], [name]
+files of the type [name] are interpreted as [name.bin]
 Runnable defaults to bin, sh
 
 Example:
@@ -18,6 +19,12 @@ $ tmake null.hello.bin
 cpp.bin.bin bf.cpp.cpp
 bf.cpp.bin null.hello.bf
 cpp.bin.bin null.hello.cpp
+
+Example:
+$ ls
+tmake.cpp cpp.bin.sh
+$ tmake tmake
+cpp.bin.sh tmake.cpp
 
 Specs:
 Will accept folders as input. Will accept multiple runnables.
