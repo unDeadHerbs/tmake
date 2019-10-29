@@ -1,8 +1,9 @@
 CXX         = clang++
+WARNINGS    = -Wall -Wextra -Wparentheses -Wno-dangling-else
 LIBARYFLAGS = -stdlib=libc++
-CXXFLAGS    = -std=c++2a -Wall -Wextra -Wparentheses -g $(SANS) $(LIBARYFLAGS)
+CXXFLAGS    = -std=c++2a -g $(SANS) $(LIBARYFLAGS)
 
-.PHOMY:all seg msan
+.PHONY:all seg msan
 all: format TAGS deps mains
 seg: clean msan
 msan:
@@ -11,11 +12,11 @@ msan:
 # generate the etags file
 TAGS:
 	@rm -f TAGS
-	@ls|grep "pp$$"|xargs -r etags -a
+	@git ls-files|grep "pp$$"|xargs -r etags -a
 	@echo "Generated Tags"
 
 # use the etags file to find all excicutables
-.PHOMY:mains
+.PHONY:mains
 mains:
 	@for f in `ls *.c*` ; do \
 		if etags $$f -o - | grep "int main(" - > /dev/null; \
@@ -23,7 +24,7 @@ mains:
 		fi ; \
 	done
 
-.PHOMY:deps
+.PHONY:deps
 deps:
 	-@for f in `ls *.cpp` ; do \
 		echo $$f | sed -e 's,cpp$$,d,' -e 's/.*/make -s .d\/&/'|sh; \
@@ -45,21 +46,29 @@ $(DEPDIR)/%.d: %.cpp
 	@echo "remade $@"
 
 # emacs flycheck-mode
-.PHOMY:check-syntax csyntax
+.PHONY:check-syntax csyntax
 check-syntax: csyntax
 csyntax:
 	$(CXX) $(CXXFLAGS) -c ${CHK_SOURCES} -o /dev/null
 
-.PHOMY: clean
+.PHONY: clean
 clean:
-	rm -f *.o *.bin .d/*.d
-	rmdir .d
+	rm -rf -- *.o *.bin .d/
 
-.PHOMY: format
+.PHONY: format
 format:
 	@find|egrep '.*[.](cpp|cxx|cc|c++|c|tpp|txx)$$'|sed 's/[] ()'\''\\[&;]/\\&/g'|xargs clang-format -i
 	@echo "reformatted code"
 
+
+.PHONY: spell
+spell:
+	@echo "- Searching for Non-words in Code files -"
+	@git ls-files | egrep "[.][ch](pp|)$$" | \
+	 while read f; do \
+	 	w=`cat $$f | aspell list --camel-case | sort | uniq | awk '{ if(length($$1)>4)print $$1 } '` ; \
+	 	[ -z "$$w" ] || echo "$$f :: $$w" | xargs ; \
+	 done
 
 include $(wildcard $(DEPDIR)/*.d)
 include $(wildcard *.d)
