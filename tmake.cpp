@@ -357,6 +357,7 @@ int main(int argument_count, char** argument_values) {
 				} else
 					sources.push_back(t);
 		}
+
 	if (verbose) {
 		cout << "# sources: ";
 		for (auto const& s : sources) cout << s << ", ";
@@ -368,7 +369,8 @@ int main(int argument_count, char** argument_values) {
 
 	// Find existing source with the correct (source, destination).
 	// TODO: Move this into `bool trivial()`.
-	vector<TDiagram> source;  // TODO: Convert this loop to `std::views` in C++20.
+	vector<TDiagram> source;
+	// TODO: Convert this loop to `std::views` in C++20.
 	for (auto& s : sources)
 		if (std::any_of(targets.begin(), targets.end(),
 		                [&](TDiagram t) { return t.source == s.source; }))
@@ -388,7 +390,9 @@ int main(int argument_count, char** argument_values) {
 	if (success) {
 		if (verbose) cout << "# Build Path:" << endl;
 		for (auto& t : transforms) {
-			if (!t.production.size()) continue;  // ignore source files
+			if (!t.production.size()) continue;
+			// ignore source files
+			// TODO: convert to filter on transforms in c++20
 			cout << "./" << t.production;
 			if (verbose) cout << "# " << t;
 			cout << endl;
