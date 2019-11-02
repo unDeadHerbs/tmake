@@ -33,11 +33,11 @@ Compiler = | Language            Assembly |
 One can put the Compiler though the Assembler to obtain a compiler
 that is executable on your system.
 ```
-            +------------------------------+                          +------------------------------+
-Compiler2 = | Language            Assembly |                        = | Language            Assembly |
-            +---------+          +---------+--------------------+     +---------+          +---------+
-                      | Assembly | Assembly             Binary  |               |  Binary  |
-                      +----------+---------+          +---------+               +----------+
+            +------------------------------+                        +------------------------------+
+Compiler2 = | Language            Assembly |                      = | Language            Assembly |
+            +---------+          +---------+--------------------+   +---------+          +---------+
+                      | Assembly | Assembly             Binary  |             |  Binary  |
+                      +----------+---------+          +---------+             +----------+
                                            |  Binary  |
                                            +----------+
 ```
@@ -69,3 +69,5 @@ Interpreter = |   Language             |
 3) Support for naming programs, i.e. a seperate file that lists the T Diageam type of each program.
 
 4) If a directory is untyped look for a file inside with the same base name as use it's type.
+
+5) Write an intelligent solver. Rather than the rrivial one and the brute force ones that currently exist.
