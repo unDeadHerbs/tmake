@@ -79,4 +79,20 @@ This ~Compiler2~ is usable for building other tools but is not providable as an 
 
 4) If a directory is untyped look for a file inside with the same base name as use it's type.
 
-5) Write an intelligent solver. Rather than the rrivial one and the brute force ones that currently exist.
+5) Write an intelligent solver. Rather than the trivial one and the brute force ones that currently exist.
+
+This should probably be done by calling out of C++ into a language that is better for that.
+
+6) Support for linking.
+
+The linking of several object files into a single binary is an important step for the tool to understand.
+The rule for the C++ linker must be able to require some flags are all or nothing for its inputs, as that is required for sensible compilation.
+
+7) Make or borrow a rule base.
+
+I believe GNU-Make has a large rule-base for how to compile different types of files, try to leverage that existing knowledge.
+
+8) Automatic structure detection.
+
+In C, C++, and many other languages, code files specify which other files they depend on.
+Automatic detection of this structure will reduce the amount of configuration required by the user.
