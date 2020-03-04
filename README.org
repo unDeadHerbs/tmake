@@ -1,10 +1,8 @@
-T-Diagram Make
-==============
+* T-Diagram Make
 
 A tool for deciding the build order of chained compilers and cross compilers.
 
-T-Diagrams
-----------
+** T-Diagrams
 
 A T-Diagram is a mental tool for keeping track of how [a set of
 compiler tools are
@@ -13,26 +11,26 @@ particularly useful when working on cross compilers or building up the
 base tool for a new system.
 
 If you have an assembler written in machine code.
-```
+#+BEGIN_SRC
             +-----------------------------+
 Assembler = | Assembly            Binary  |
             +---------+          +--------+
                       |  Binary  |
                       +----------+
-```
+#+END_SRC
 
 And a compiler to assembly written in assembly.
-```
+#+BEGIN_SRC
            +------------------------------+
 Compiler = | Language            Assembly |
            +---------+          +---------+
                      | Assembly |
                      +----------+
-```
+#+END_SRC
 
 One can put the Compiler though the Assembler to obtain a compiler
 that is executable on your system.
-```
+#+BEGIN_SRC
             +------------------------------+                        +------------------------------+
 Compiler2 = | Language            Assembly |                      = | Language            Assembly |
             +---------+          +---------+--------------------+   +---------+          +---------+
@@ -40,31 +38,42 @@ Compiler2 = | Language            Assembly |                      = | Language  
                       +----------+---------+          +---------+             +----------+
                                            |  Binary  |
                                            +----------+
-```
+#+END_SRC
 
 
-Future Work
------------
+** Future Work
 
 1) Currently an optimizer isn't expressible in the TDig class.
-
-```
+#+BEGIN_SRC
             +--------------------------------------+
 Optimizer = | Intermediate  Quality   Intermediate |
             +-------------+          +-------------+
                           |  Binary  |
                           +----------+
-```
+#+END_SRC
 
 2) Support for interpreters.
-
-```
+#+BEGIN_SRC
               +------------------------+
 Interpreter = |   Language             |
               +-------------+          +
                             |  Binary  |
                             +----------+
-```
+#+END_SRC
+
+An interpreter is a tool that can be used to build intermediate tools but not final tools.
+For example:
+#+BEGIN_SRC
+            +------------------------------+              +------------------------------+
+Compiler2 = | Language            Assembly |            = | Language            Assembly |
+            +---------+          +---------+----------+   +---------+          +---------+
+                      | Assembly | Assembly           |             |  Binary  |
+                      +----------+---------+          |             +----------+
+                                           |  Binary  |
+                                           +----------+
+#+END_SRC
+
+This ~Compiler2~ is usable for building other tools but is not providable as an output.
 
 3) Support for naming programs, i.e. a seperate file that lists the T Diageam type of each program.
 
